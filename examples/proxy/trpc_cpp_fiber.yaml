@@ -1,0 +1,68 @@
+global:
+  threadmodel:
+    fiber:                            # Use Fiber(m:n coroutine) threadmodel
+      - instance_name: fiber_instance # Need to be unique if you config mutiple fiber threadmodel instances
+        # Fiber worker thread num
+        # If not specified, will use number of cores on the machine.
+        # In a Numa architecture, the workers will be automatically grouped (8-15 cores per group),
+        # while in Uma architecture, they will not be grouped.
+        concurrency_hint: 8
+server:
+  app: test
+  server: forword
+  admin_port: 8889
+  admin_ip: 0.0.0.0
+  service:
+    - name: trpc.test.forword.Forward
+      protocol: trpc
+      network: tcp
+      ip: 0.0.0.0
+      port: 12346
+  filter:
+    - opentelemetry
+
+client:
+  service:
+    - name: trpc.test.helloworld.Greeter
+      target: 0.0.0.0:12345      
+      protocol: trpc
+      timeout: 1000
+      network: tcp
+      conn_type: long
+      is_conn_complex: true
+      selector_name: direct
+  filter:
+    - opentelemetry
+
+plugins:
+  telemetry:
+    opentelemetry:
+      addr: 127.0.0.1:4318
+      protocol: http
+      selector_name: direct
+      timeout: 10000
+      sampler:
+        fraction: 0.001
+      metrics:
+        enabled: true
+      logs:
+        enabled: true
+        level: info
+        enable_sampler: true
+        enable_sampler_error: true
+        resources:
+          tenant.id: default
+      traces:
+        disable_trace_body: true
+        enable_deferred_sample: false
+        deferred_sample_error: true
+        deferred_sample_slow_duration: 500
+        disable_parent_sampling: false
+        resources:
+          tenant.id: default
+  log:
+    default:
+      - name: default
+        sinks:
+          local_file:
+            filename: forward_server.log

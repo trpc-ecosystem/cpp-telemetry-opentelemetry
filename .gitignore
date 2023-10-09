@@ -1,0 +1,16 @@
+.vscode/
+.idea/
+
+bazel-*
+*.swp
+*.o
+*.log
+*.so
+*.a
+*.dylib
+
+CMakeCache.txt                                                                                                                                           
+CMakeFiles
+CMakeScripts
+cmake_third_party/
+cmake-build-debug/

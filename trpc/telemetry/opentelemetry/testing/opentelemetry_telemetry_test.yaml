@@ -1,0 +1,45 @@
+plugins:
+  telemetry:
+    opentelemetry:
+      addr: 127.0.0.1:8888
+      protocol: http
+      selector_name: direct
+      timeout: 10000
+      sampler:
+        fraction: 1
+      metrics:
+        enabled: true
+        client_histogram_buckets: [1, 2, 3, 4]
+        server_histogram_buckets: [1, 2, 3, 4]
+        codes:
+          - code: 100
+            type: success
+            description: success
+            service: ser1
+            method: method1
+      logs:
+        enabled: true
+        level: info
+        enable_sampler: true
+        enable_sampler_error: true
+      traces:
+        disable_trace_body: false
+        enable_deferred_sample: true
+        deferred_sample_error: true
+        deferred_sample_slow_duration: 500
+        disable_parent_sampling: false
+  log:
+    default:
+      - name: default
+        min_level: 2 # 0-trace, 1-debug, 2-info, 3-warn, 4-error, 5-critical
+        format: "[%H:%M:%S %z] %v"
+        mode: 1  # 1-sync, 2-async, 3-fast
+        sinks:
+          local_file:
+            eol: true
+            filename: test.log
+            roll_type: by_hour
+            roll_size: 10000000
+            rotation_hour: 19
+            rotation_minute: 51
+            reserve_count: 5

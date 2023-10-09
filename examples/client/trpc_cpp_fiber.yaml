@@ -1,0 +1,44 @@
+global:
+  threadmodel:
+    fiber:
+      - instance_name: fiber_instance
+        concurrency_hint: 4
+        scheduling_group_size: 4
+        reactor_num_per_scheduling_group: 1
+
+client:
+  filter:
+    - opentelemetry
+
+plugins:
+  telemetry:
+    opentelemetry:
+      addr: 127.0.0.1:4318
+      protocol: http
+      selector_name: direct
+      timeout: 10000
+      sampler:
+        fraction: 0.001
+      metrics:
+        enabled: true
+      logs:
+        enabled: true
+        level: info
+        enable_sampler: true
+        enable_sampler_error: true
+        resources:
+          tenant.id: default
+      traces:
+        disable_trace_body: true
+        enable_deferred_sample: false
+        deferred_sample_error: true
+        deferred_sample_slow_duration: 500
+        disable_parent_sampling: false
+        resources:
+          tenant.id: default
+  log:
+    default:
+      - name: default
+        sinks:
+          local_file:
+            filename: client.log
