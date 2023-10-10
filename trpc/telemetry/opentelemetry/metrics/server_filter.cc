@@ -72,7 +72,7 @@ void OpenTelemetryMetricsServerFilter::ReportServerStartedTotal(const ServerCont
 void OpenTelemetryMetricsServerFilter::ReportServerHandledSeconds(const ServerContextPtr& context,
                                                                   ModuleMetricsInfo& module_info) {
   module_info.extend_info = trpc::opentelemetry::ModuleReportType::kServerHandledTime;
-  module_info.cost_time = trpc::TimeProvider::GetNowMs() - context->GetRecvTimestamp();
+  module_info.cost_time = trpc::time::GetMilliSeconds() - context->GetRecvTimestamp();
   metrics_plugin_->ModuleReport(module_info);
 }
 
