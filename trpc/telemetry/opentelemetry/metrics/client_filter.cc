@@ -75,7 +75,7 @@ void OpenTelemetryMetricsClientFilter::ReportClientStartedTotal(const ClientCont
 void OpenTelemetryMetricsClientFilter::ReportClientHandledSeconds(const ClientContextPtr& context,
                                                                   ModuleMetricsInfo& module_info) {
   module_info.extend_info = trpc::opentelemetry::ModuleReportType::kClientHandledTime;
-  module_info.cost_time = (trpc::TimeProvider::GetNowUs() - context->GetSendTimestampUs()) / 1000;
+  module_info.cost_time = (trpc::time::GetMicroSeconds() - context->GetSendTimestampUs()) / 1000;
   metrics_plugin_->ModuleReport(module_info);
 }
 
