@@ -1,6 +1,9 @@
 [中文](./README.zh_CN.md)
 
-[TOC]
+[![LICENSE](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/trpc-ecosystem/cpp-telemetry-opentelemetry/blob/main/LICENSE)
+[![Releases](https://img.shields.io/github/release/trpc-ecosystem/cpp-telemetry-opentelemetry.svg?style=flat-square)](https://github.com/trpc-ecosystem/cpp-telemetry-opentelemetry/releases)
+[![Build Status](https://github.com/trpc-ecosystem/cpp-telemetry-opentelemetry/actions/workflows/ci.yml/badge.svg)](https://github.com/trpc-ecosystem/cpp-telemetry-opentelemetry/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/trpc-ecosystem/cpp-telemetry-opentelemetry/branch/main/graph/badge.svg)](https://app.codecov.io/gh/trpc-ecosystem/cpp-telemetry-opentelemetry/tree/main)
 
 # Overview
 
