@@ -26,7 +26,8 @@
 1. 引入仓库
 
     在项目的`WORKSPACE`文件中，引入`cpp-telemetry-opentelemetry`仓库及其依赖：
-    ```
+
+    ```python
     load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
     git_repository(
@@ -51,7 +52,8 @@
 2. 引入插件
 
     在需要用到OpenTelemetry的目标中引入“`trpc/telemetry/opentelemetry:opentelemetry_telemetry_api`”依赖。例如：
-    ```
+
+    ```python
     cc_binary(
         name = "helloworld_server",
         srcs = ["helloworld_server.cc"],
@@ -65,18 +67,48 @@
 3. 编译选项
 
     * 由于监控功能用到了框架的Prometheus能力，所以要使用插件的监控功能，需要加上“`trpc_include_prometheus`”编译选项。例如在.bazelrc中加上：
-        ```
+
+        ```bash
         build --define trpc_include_prometheus=true
         ```
 
     * 由于当前引入的[opentelemetry-cpp v1.9.1版本](https://github.com/open-telemetry/opentelemetry-cpp/tree/v1.9.1)中，日志功能仍然处于预览状态，所以要使用插件的日志功能，需要加上“`ENABLE_LOGS_PREVIEW`”编译宏。例如在.bazelrc中加上：
-        ```
+
+        ```bash
         build --copt="-DENABLE_LOGS_PREVIEW"
         ```
 
 #### CMake
 
-暂不支持。
+参考如下的 CMakeLists.txt 来组织项目：
+
+```bash
+# Enable promethues
+set(TRPC_BUILD_WITH_METRICS_PROMETHEUS ON)
+
+# First, import trpc-cpp.
+include(FetchContent)
+FetchContent_Declare(
+    trpc-cpp
+    GIT_REPOSITORY    https://github.com/trpc-group/trpc-cpp.git
+    GIT_TAG           change_to_tag_you_use
+    SOURCE_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/cmake_third_party/trpc-cpp
+)
+FetchContent_MakeAvailable(trpc-cpp)
+
+# Then, import cpp-telemetry-opentelemetry
+FetchContent_Declare(
+    trpc_cpp_telemetry_opentelemetry
+    GIT_REPOSITORY    https://github.com/trpc-ecosystem/cpp-telemetry-opentelemetry.git
+    GIT_TAG           change_to_tag_you_use
+    SOURCE_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/cmake_third_party/trpc_cpp_telemetry_opentelemetry
+)
+FetchContent_MakeAvailable(trpc_cpp_telemetry_opentelemetry)
+
+# Last, link to your target
+target_link_libraries(your_target trpc
+                                  trpc_cpp_plugin_telemetry_opentelemetry)
+```
 
 ### 注册
 
@@ -114,6 +146,7 @@ OpenTelemetry插件提供了插件和拦截器注册的接口`::trpc::openteleme
 ### 配置插件
 
 必须在框架配置文件中加上OpenTelemetry插件的配置。
+
 ```yaml
 plugins:
   telemetry:
@@ -189,6 +222,7 @@ OpenTelemetry插件的调用链和模调数据上报通过拦截器来自动执�
 #### 启用客户端拦截器
 
 只需要在框架的客户端配置中加上OpenTelemetry拦截器即可：
+
 ```yaml
 client:
   filter:
@@ -198,6 +232,7 @@ client:
 #### 启用服务端拦截器
 
 只需要在框架的服务端配置中加上OpenTelemetry拦截器即可：
+
 ```yaml
 server:
   filter:
@@ -258,6 +293,7 @@ server:
     注意：
     * 当前只支持上报Protobuf编码类型的数据，其他编码类型暂不支持。
     * 为了避免请求/响应包过大的情况下影响上报效率，框架会对大包的内容进行截断。用户可以自行设置截断的阈值：
+
         ```cpp
         /// @brief Sets the maximum allowed length of the request/response data that can be reported
         /// @note The interface is not thread-safe, and users should only set it during the framework initialization process.
@@ -265,6 +301,7 @@ server:
         ```
 
 注意：
+
 * 在中转模式下，`ClientContext`需要调用框架的`MakeClientContext`接口，根据`ServerContext`来构造。否则服务端和客户端之间的调用关系会丢失，无法构成完整的调用链。
 
 #### 采样
@@ -282,12 +319,13 @@ server:
     * **强制采样**
 
         特点：**用户可以根据请求的具体信息，来决定是否对当前的调用进行强制采样。**
-    
+
         使用方法：
 
         * 自定义一个设置Span启动属性的回调函数
 
             回调函数类型：
+
             ```cpp
             /// @brief The type definition of the span's startup attributes setting function. Users can customize startup attributes
             ///        through this callback function.
@@ -301,6 +339,7 @@ server:
             ```
 
             自定义回调函数：
+
             ```cpp
             void TraceAttributesCallback(const trpc::ServerContextPtr& context, const void* req,
                                          std::unordered_map<std::string, std::string>& attributes) {
@@ -318,6 +357,7 @@ server:
         * 注册回调函数
 
             注册接口：
+
             ```cpp
             /// @brief Sets server-side span's startup attributes setting function
             /// @note The interface is not thread-safe, and users should only set it during the framework initialization process.
@@ -325,6 +365,7 @@ server:
             ```
 
             在服务启动时注册该回调函数：
+
             ```cpp
             #include "trpc/telemetry/opentelemetry/opentelemetry_telemetry_api.h"
 
@@ -360,6 +401,7 @@ server:
 #### 自定义Span操作
 
 可以通过`::trpc::opentelemetry::GetTracingSpan`接口从ServerContext中取出当前调用的Span，然后调用[opentelemetry-cpp](https://github.com/open-telemetry/opentelemetry-cpp/tree/v1.9.1)原生的API对Span进行设置。
+
 ```cpp
 using OpenTelemetryTracingSpanPtr = ::opentelemetry::nostd::shared_ptr<::opentelemetry::trace::Span>;
 
@@ -371,6 +413,7 @@ OpenTelemetryTracingSpanPtr GetTracingSpan(const ServerContextPtr& context);
 ```
 
 另外，我们提供了便捷的接口获取当前调用的TraceID和SpanID。
+
 ```cpp
 /// @brief Gets the trace id.
 /// @param context server context
@@ -394,11 +437,13 @@ std::string GetSpanID(const ServerContextPtr& context);
 使用方法：
 
 1. 自定义[TextMapCarrier](https://github.com/open-telemetry/opentelemetry-cpp/blob/v1.9.1/api/include/opentelemetry/context/propagation/text_map_propagator.h)，用于opentelemetry-cpp SDK设置和提取调用链信息。
+
     ```cpp
     using TextMapCarrierPtr = std::unique_ptr<::opentelemetry::context::propagation::TextMapCarrier>;
     ```
 
 2. 自定义`ClientTextMapCarrierFunc`和`ServerTextMapCarrierFunc`，根据Context构造`TextMapCarrier`。
+
     ```cpp
     using ClientTextMapCarrierFunc = std::function<TextMapCarrierPtr(const ClientContextPtr& context)>;
 
@@ -406,6 +451,7 @@ std::string GetSpanID(const ServerContextPtr& context);
     ```
 
 3. 在程序启动时注册`ClientTextMapCarrierFunc`和`ServerTextMapCarrierFunc`。
+
     ```cpp
     /// @brief Sets a client-side TextMapCarrier retrieval function for a specific protocol.
     /// @param protocol_name protocol name
@@ -566,6 +612,7 @@ OpenTelemetry插件的监控会统计RPC调用的成功率、超时率和异常�
 如果业务需要对状态码（包括框架状态码和业务自定义状态码）的类型进行自定义，则可以通过配置中的`metrics:codes`进行自定义。
 
 例如用户认为服务端返回10001是正常的情况，不应该统计成异常，则可以做如下定义：
+
 ```yaml
 plugins:
   telemetry:
@@ -594,6 +641,7 @@ plugins:
 可以使用框架带`instance`和`context`参数的日志宏来打印OpenTelemetry日志，其中`instance`指定为`::trpc::opentelemetry::kOpenTelemetryLoggerName`。
 
 例如：
+
 ```cpp
 TRPC_LOGGER_FMT_INFO_EX(context, ::trpc::opentelemetry::kOpenTelemetryLoggerName, "msg: {}", "test");
 TRPC_LOGGER_PRT_INFO_EX(context, ::trpc::opentelemetry::kOpenTelemetryLoggerName, "msg: %s", "test");
@@ -601,6 +649,7 @@ TRPC_LOGGER_INFO_EX(context, ::trpc::opentelemetry::kOpenTelemetryLoggerName, "m
 ```
 
 决定日志是否上报有三个配置选项：`logs:level`、`logs:enable_sampler`、`logs:enable_sampler_error`。各自的控制逻辑如下：
+
 * logs:level：只有级别大于等于level的日志才会上报。
 * logs:enable_sampler：若为true，则只有命中采样的日志才会上报，未命中采样的日志不会上报；若为false，则全部日志都会上报。（命中采样是指此次调用的调用链被采样）
 * logs:enable_sampler_error：只有enable_sampler为true的情况下才生效。效果是：即使未命中采样，但只要打印的日志其级别大于等于error，则该错误日志也会被上报。

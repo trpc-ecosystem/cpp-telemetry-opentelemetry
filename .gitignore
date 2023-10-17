@@ -14,3 +14,7 @@ CMakeFiles
 CMakeScripts
 cmake_third_party/
 cmake-build-debug/
+build
+
+*.pb.h
+*.pb.cc

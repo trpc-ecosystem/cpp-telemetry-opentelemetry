@@ -79,8 +79,8 @@ void HttpHeaderWriter::Set(::opentelemetry::nostd::string_view key,
     rapidjson::Document document;
     rapidjson::ParseResult parse_ok = document.Parse(http_request_.GetHeader("trpc-trans-info").c_str());
     if (parse_ok) {
-      if (document.IsObject() && document.HasMember(key_str) && document[key_str].IsString()) {
-        std::string value = document[key_str].GetString();
+      if (document.IsObject() && document.HasMember(key_str.c_str()) && document[key_str.c_str()].IsString()) {
+        std::string value = document[key_str.c_str()].GetString();
         // Since the Get interface returns a string_view, it need to store the value instead of returning a temporary
         // variable directly.
         trace_info_[key_str] = std::move(value);
