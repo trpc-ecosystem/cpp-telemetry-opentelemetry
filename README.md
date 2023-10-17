@@ -26,7 +26,8 @@ To use the OpenTelemetry Telemetry plugin in a project, you need to follow these
 1. Import repository
 
     Import the `cpp-telemetry-opentelemetry` repository and its dependencies in your project's `WORKSPACE` file.
-    ```
+
+    ```python
     load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
     git_repository(
@@ -51,7 +52,8 @@ To use the OpenTelemetry Telemetry plugin in a project, you need to follow these
 2. Import plugin
 
     Import the "`trpc/telemetry/opentelemetry:opentelemetry_telemetry_api`" dependency in the targets that require OpenTelemetry. For example:
-    ```
+
+    ```python
     cc_binary(
         name = "helloworld_server",
         srcs = ["helloworld_server.cc"],
@@ -65,18 +67,48 @@ To use the OpenTelemetry Telemetry plugin in a project, you need to follow these
 3. Compilation options
 
     * Since the metrics feature relies on the prometheus capability of the framework, to use the metrics functionality of the plugin, you need to include the "`trpc_include_prometheus`" compilation option. For example, add the following line to your .bazelrc file:
-        ```
+
+        ```bash
         build --define trpc_include_prometheus=true
         ```
 
     * Since the logging feature is still in preview in the current version of [opentelemetry-cpp (v1.9.1)](https://github.com/open-telemetry/opentelemetry-cpp/tree/v1.9.1), to use the logging functionality of the plugin, you need to add the "`ENABLE_LOGS_PREVIEW`" compilation macro. For example, add the following line to your .bazelrc file:
-        ```
+
+        ```bash
         build --copt="-DENABLE_LOGS_PREVIEW"
         ```
 
 #### CMake
 
-Not supported yet.
+Please refer to below code snippets of CMakeLists.txt:
+
+```bash
+# Enable promethues
+set(TRPC_BUILD_WITH_METRICS_PROMETHEUS ON)
+
+# First, import trpc-cpp.
+include(FetchContent)
+FetchContent_Declare(
+    trpc-cpp
+    GIT_REPOSITORY    https://github.com/trpc-group/trpc-cpp.git
+    GIT_TAG           change_to_tag_you_use
+    SOURCE_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/cmake_third_party/trpc-cpp
+)
+FetchContent_MakeAvailable(trpc-cpp)
+
+# Then, import cpp-telemetry-opentelemetry
+FetchContent_Declare(
+    trpc_cpp_telemetry_opentelemetry
+    GIT_REPOSITORY    https://github.com/trpc-ecosystem/cpp-telemetry-opentelemetry.git
+    GIT_TAG           change_to_tag_you_use
+    SOURCE_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/cmake_third_party/trpc_cpp_telemetry_opentelemetry
+)
+FetchContent_MakeAvailable(trpc_cpp_telemetry_opentelemetry)
+
+# Last, link to your target
+target_link_libraries(your_target trpc
+                                  trpc_cpp_plugin_telemetry_opentelemetry)
+```
 
 ### Registration
 
@@ -114,6 +146,7 @@ The OpenTelemetry plugin provides an interface for registering plugin and filter
 ### Configure the plugin
 
 It necessary to add the configuration of the OpenTelemetry plugin in the framework's configuration file.
+
 ```yaml
 plugins:
   telemetry:
@@ -189,6 +222,7 @@ The OpenTelemetry plugin automatically performs the reporting of traces and inte
 #### Enable ClientFilter
 
 Just add the OpenTelemetry filter in the client configuration of the framework:
+
 ```yaml
 client:
   filter:
@@ -198,6 +232,7 @@ client:
 #### Enable ServerFilter
 
 Just add the OpenTelemetry filter in the server configuration of the framework:
+
 ```yaml
 server:
   filter:
@@ -258,6 +293,7 @@ After configuring the filters, the framework will automatically collect and repo
     Note that:
     * Currently, only the data with Protobuf encoding type is supported for reporting.
     * In order to avoid affecting the reporting efficiency when the request/response packet is too large, the framework will truncate the contents of large packets. Users can set the truncation threshold by themselves.
+
         ```cpp
         /// @brief Sets the maximum allowed length of the request/response data that can be reported
         /// @note The interface is not thread-safe, and users should only set it during the framework initialization process.
@@ -265,6 +301,7 @@ After configuring the filters, the framework will automatically collect and repo
         ```
 
 Note that:
+
 * In the proxy mode, it is necessary to invoke the framework's `MakeClientContext` interface to construct the `ClientContext` based on the `ServerContext`. Otherwise, the call relationship between the server and client will be lost, and a complete call chain cannot be formed.
 
 #### Sampling
@@ -282,12 +319,13 @@ Note that:
     * **Force sampling**
 
         Feature: **Users can decide whether to force sampling for the current call based on the specific request information.**
-    
+
         Usage:
 
         * Customize a callback function that sets Span startup attributes
 
             The type of callback function is:
+
             ```cpp
            /// @brief The type definition of the span's startup attributes setting function. Users can customize startup attributes
             ///        through this callback function.
@@ -301,6 +339,7 @@ Note that:
             ```
 
             Custom the callback function:
+
             ```cpp
             void TraceAttributesCallback(const trpc::ServerContextPtr& context, const void* req,
                                          std::unordered_map<std::string, std::string>& attributes) {
@@ -318,6 +357,7 @@ Note that:
         * Register callback function
 
             The registration interface:
+
             ```cpp
             /// @brief Sets server-side span's startup attributes setting function
             /// @note The interface is not thread-safe, and users should only set it during the framework initialization process.
@@ -325,6 +365,7 @@ Note that:
             ```
 
             Register the callback function when the service starts:
+
             ```cpp
             #include "trpc/telemetry/opentelemetry/opentelemetry_telemetry_api.h"
 
@@ -360,6 +401,7 @@ Note that:
 #### Customize span operation
 
 You can retrieve the current Span from the ServerContext using the `::trpc::opentelemetry::GetTracingSpan` interface and then use the native API of [opentelemetry-cpp](https://github.com/open-telemetry/opentelemetry-cpp/tree/v1.9.1) to setup the Span.
+
 ```cpp
 using OpenTelemetryTracingSpanPtr = ::opentelemetry::nostd::shared_ptr<::opentelemetry::trace::Span>;
 
@@ -371,6 +413,7 @@ OpenTelemetryTracingSpanPtr GetTracingSpan(const ServerContextPtr& context);
 ```
 
 Additionally, we provide convenient interfaces to retrieve the TraceID and SpanID of the current call.
+
 ```cpp
 /// @brief Gets the trace id.
 /// @param context server context
@@ -394,11 +437,13 @@ The plugins currently only support information transmission for the `trpc` and `
 Usage:
 
 1. Customize [TextMapCarrier](https://github.com/open-telemetry/opentelemetry-cpp/blob/v1.9.1/api/include/opentelemetry/context/propagation/text_map_propagator.h) for setting and extracting traces data in the opentelemetry-cpp SDK.
+
     ```cpp
     using TextMapCarrierPtr = std::unique_ptr<::opentelemetry::context::propagation::TextMapCarrier>;
     ```
 
 2. Customize `ClientTextMapCarrierFunc` and `ServerTextMapCarrierFunc` to construct TextMapCarrier based on the Context.
+
     ```cpp
     using ClientTextMapCarrierFunc = std::function<TextMapCarrierPtr(const ClientContextPtr& context)>;
 
@@ -406,6 +451,7 @@ Usage:
     ```
 
 3. Register `ClientTextMapCarrierFunc` and `ServerTextMapCarrierFunc` during program startup.
+
     ```cpp
     /// @brief Sets a client-side TextMapCarrier retrieval function for a specific protocol.
     /// @param protocol_name protocol name
@@ -422,7 +468,7 @@ You can refer to the implementation of the trpc and http protocols in [client_fi
 
 ### Metrics reporting
 
-The prerequisite for the normal use of the metrics reporting function is to add the `Prometheus compilation option` at compilation and set `metrics: enabled` to `true` in the configuration file. 
+The prerequisite for the normal use of the metrics reporting function is to add the `Prometheus compilation option` at compilation and set `metrics: enabled` to `true` in the configuration file.
 
 #### ModuleReport
 
@@ -467,7 +513,7 @@ In addition to automatically collecting RPC call data, the plugin also defines a
 | opentelemetry_summary_report | Summary |
 | opentelemetry_histogram_report | Histogram |
 
-The statistical strategies provided by the plugin are as follow. 
+The statistical strategies provided by the plugin are as follow.
 
 | Statistical Strategy | Corresponding Metrics Item | Description |
 | ------ | ------ | ------ |
@@ -566,6 +612,7 @@ The OpenTelemetry plugin's metrics will calculate the success rate, timeout rate
 If the business needs to customize the type of status codes (including framework status codes and business custom status codes), it can be customized through `metrics: codes` in the configuration.
 
 For example, if a user thinks that returning 10001 from the server is a normal situation and should not be counted as an exception, it can be defined as follows:
+
 ```yaml
 plugins:
   telemetry:
@@ -594,6 +641,7 @@ The prerequisite for the normal use of the logs reporting function is to add the
 The OpenTelemetry log can be printed using the framework's log macro with the `instance` and `context` parameters specified, where `instance` is set to `::trpc::opentelemetry::kOpenTelemetryLoggerName`.
 
 For example:
+
 ```cpp
 TRPC_LOGGER_FMT_INFO_EX(context, ::trpc::opentelemetry::kOpenTelemetryLoggerName, "msg: {}", "test");
 TRPC_LOGGER_PRT_INFO_EX(context, ::trpc::opentelemetry::kOpenTelemetryLoggerName, "msg: %s", "test");
@@ -601,6 +649,7 @@ TRPC_LOGGER_INFO_EX(context, ::trpc::opentelemetry::kOpenTelemetryLoggerName, "m
 ```
 
 The decision of whether to report logs has three configuration options: `logs:level`, `logs:enable_sampler`, and `logs:enable_sampler_error`. The control logic for each is as follows:
+
 * logs:level: Only logs with levels greater than or equal to `level` will be reported.
 * logs:enable_sampler: If `true`, only logs that hit the sampling will be reported, and logs that don't hit the sampling will not be reported. If `false`, all logs will be reported. (Sampling hit means that the call chain of this call is sampled)
 * logs:enable_sampler_error: Only effective when `enable_sampler` is `true`. The effect is that even if the sampling is not hit, if the level of the logged message is greater than or equal to `error`, the error log will also be reported.
