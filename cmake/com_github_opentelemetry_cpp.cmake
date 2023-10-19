@@ -35,6 +35,12 @@ if(NOT com_github_opentelemetry_cpp_POPULATED)
     set(WITH_BENCHMARK OFF)
     set(WITH_LOGS_PREVIEW ON)
 
+    # Replace CMakeLists.txt of opentelemetry_cpp to fix some error and use protoc build for trpc-cpp
+    execute_process(
+      COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools/opentelemetry_cpp_CMakeLists.txt ${com_github_opentelemetry_cpp_SOURCE_DIR}/CMakeLists.txt
+      WORKING_DIRECTORY ${com_github_opentelemetry_cpp_SOURCE_DIR}
+    )
+
     add_subdirectory(${com_github_opentelemetry_cpp_SOURCE_DIR})
 endif()
 
