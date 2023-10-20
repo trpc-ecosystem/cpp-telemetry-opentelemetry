@@ -13,11 +13,36 @@ jobs:
   compile-with-bazel:
     runs-on:
       group: Default
-      labels: trpc-cpp-plugins-ci
+      labels: trpc-ecosystem-cpp-ci
+    container:
+      image: ghcr.io/trpc-group/trpc-cpp-compile-gcc8-centos7:0.1.0
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Test
-      run: |
-           ./clean.sh
-           bazel test //trpc/...
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Test
+        run: |
+             export PATH=/opt/rh/devtoolset-8/root/usr/bin:$PATH
+             ./clean.sh
+             bazel coverage //trpc/... --test_output=all --coverage_report_generator="@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main" --combined_report=lcov --nocache_test_results
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          file: bazel-out/_coverage/_coverage_report.dat
+  compile-with-cmake:
+    runs-on:
+      group: Default
+      labels: trpc-ecosystem-cpp-ci
+    container:
+      image: ghcr.io/trpc-group/trpc-cpp-compile-gcc8-centos7:0.1.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Make
+        run: |
+             export PATH=/opt/rh/devtoolset-8/root/usr/bin:$PATH
+             mkdir build
+             cd build
+             cmake ..
+             make -j8
