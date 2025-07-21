@@ -653,3 +653,10 @@ The decision of whether to report logs has three configuration options: `logs:le
 * logs:level: Only logs with levels greater than or equal to `level` will be reported.
 * logs:enable_sampler: If `true`, only logs that hit the sampling will be reported, and logs that don't hit the sampling will not be reported. If `false`, all logs will be reported. (Sampling hit means that the call chain of this call is sampled)
 * logs:enable_sampler_error: Only effective when `enable_sampler` is `true`. The effect is that even if the sampling is not hit, if the level of the logged message is greater than or equal to `error`, the error log will also be reported.
+
+# LICENSE
+
+[LICENSE](LICENSE)
+
+The copyright notice pertaining to the Tencent code in this repo was previously in the name of “THL A29 Limited.”  That entity has now been de-registered.  You should treat all previously distributed copies of the code as if the copyright notice was in the name of “Tencent.”
+

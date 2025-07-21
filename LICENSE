@@ -1,5 +1,5 @@
-Copyright (C) 2023 THL A29 Limited, a Tencent company.  All rights reserved. The below software in this distribution may have been modified by THL A29 Limited ("Tencent Modifications"). 
-All Tencent Modifications are Copyright (C) THL A29 Limited.
+Copyright (C) 2023 Tencent.  All rights reserved. The below software in this distribution may have been modified by Tencent ("Tencent Modifications"). 
+All Tencent Modifications are Copyright (C) Tencent.
 
 cpp-telemetry-opentelemetry is licensed under the Apache License Version 2.0 except for the third-party components listed below.
 
@@ -178,7 +178,7 @@ https://github.com/jupp0r/prometheus-cpp/tree/v1.1.0/3rdparty
 
 
 Open Source Software Licensed under the Curl License:
-The below software in this distribution may have been modified by THL A29 Limited ("Tencent Modifications"). All Tencent Modifications are Copyright (C) 2023 THL A29 Limited.
+The below software in this distribution may have been modified by Tencent ("Tencent Modifications"). All Tencent Modifications are Copyright (C) 2023 Tencent.
 --------------------------------------------------------------------
 1. curl
 Copyright (C) 1996 - 2021, Daniel Stenberg, <daniel@haxx.se>, and many
